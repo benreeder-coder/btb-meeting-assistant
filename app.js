@@ -292,29 +292,90 @@ class UIController {
 
         const data = await response.json();
 
-        // Handle different response formats from n8n
+        // Debug logging - check browser console to see actual response structure
+        console.log('API Response:', JSON.stringify(data, null, 2));
+
+        // Extract the AI response from various n8n response formats
+        return this.extractResponse(data);
+    }
+
+    extractResponse(data) {
+        // If it's already a string, return it
         if (typeof data === 'string') {
             return data;
         }
-        if (data.output) {
-            return data.output;
-        }
-        if (data.text) {
-            return data.text;
-        }
-        if (data.response) {
-            return data.response;
-        }
-        if (data.message) {
-            return data.message;
-        }
-        // If it's an array (from AI Agent node)
-        if (Array.isArray(data) && data.length > 0) {
-            const first = data[0];
-            return first.output || first.text || first.response || first.message || JSON.stringify(first);
+
+        // If it's null or undefined
+        if (data == null) {
+            return 'No response received from the assistant.';
         }
 
-        return JSON.stringify(data);
+        // If it's an array, get the first item and extract from it
+        if (Array.isArray(data)) {
+            if (data.length === 0) {
+                return 'No response received from the assistant.';
+            }
+            return this.extractResponse(data[0]);
+        }
+
+        // Check for common n8n AI Agent response properties
+        // The AI Agent node typically returns { output: "..." }
+        if (data.output !== undefined) {
+            return typeof data.output === 'string' ? data.output : this.extractResponse(data.output);
+        }
+
+        // Check for nested json property (sometimes n8n wraps responses)
+        if (data.json !== undefined) {
+            return this.extractResponse(data.json);
+        }
+
+        // Check for text property
+        if (data.text !== undefined) {
+            return typeof data.text === 'string' ? data.text : this.extractResponse(data.text);
+        }
+
+        // Check for response property
+        if (data.response !== undefined) {
+            return typeof data.response === 'string' ? data.response : this.extractResponse(data.response);
+        }
+
+        // Check for message property
+        if (data.message !== undefined) {
+            return typeof data.message === 'string' ? data.message : this.extractResponse(data.message);
+        }
+
+        // Check for content property (OpenAI format)
+        if (data.content !== undefined) {
+            return typeof data.content === 'string' ? data.content : this.extractResponse(data.content);
+        }
+
+        // Check for result property
+        if (data.result !== undefined) {
+            return typeof data.result === 'string' ? data.result : this.extractResponse(data.result);
+        }
+
+        // Check for data property (nested wrapper)
+        if (data.data !== undefined) {
+            return this.extractResponse(data.data);
+        }
+
+        // Check for body property
+        if (data.body !== undefined) {
+            return this.extractResponse(data.body);
+        }
+
+        // If it's an object with unknown structure, try to find any string value
+        const keys = Object.keys(data);
+        for (const key of keys) {
+            if (typeof data[key] === 'string' && data[key].length > 10) {
+                console.log(`Found response in key: ${key}`);
+                return data[key];
+            }
+        }
+
+        // Last resort: stringify the object
+        console.warn('Could not extract response, returning stringified data:', data);
+        return JSON.stringify(data, null, 2);
     }
 
     showTypingIndicator() {
