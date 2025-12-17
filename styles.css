@@ -1055,21 +1055,27 @@ body {
         overflow-y: auto;
     }
 
-    /* Sidebar - high z-index to appear above overlay */
+    /* Sidebar - very high z-index to appear above overlay */
     .sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        width: 280px;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        right: auto !important;
+        width: 280px !important;
         transform: translateX(-100%);
-        z-index: 200;
+        -webkit-transform: translateX(-100%);
+        z-index: 9999 !important;
         box-shadow: 4px 0 40px rgba(0, 0, 0, 0.5);
         transition: transform 0.3s ease;
+        -webkit-transition: -webkit-transform 0.3s ease;
+        visibility: visible !important;
+        pointer-events: auto !important;
     }
 
     .sidebar.open {
-        transform: translateX(0);
+        transform: translateX(0) !important;
+        -webkit-transform: translateX(0) !important;
     }
 
     .sidebar-toggle {
@@ -1176,9 +1182,13 @@ body {
 .sidebar-overlay {
     display: none;
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: rgba(6, 6, 10, 0.8);
-    z-index: 150; /* Between sidebar (200) and content */
+    z-index: 9998; /* Just below sidebar (9999) */
+    -webkit-tap-highlight-color: transparent;
 }
 
 .sidebar-overlay.active {
