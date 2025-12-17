@@ -240,6 +240,7 @@ body {
     background: var(--accent-gradient-hover);
     opacity: 0;
     transition: opacity var(--transition-medium);
+    pointer-events: none; /* Prevent touch capture on mobile */
 }
 
 .new-chat-btn:hover {
@@ -1081,6 +1082,17 @@ body {
     .sidebar-toggle {
         display: flex;
         z-index: 50;
+    }
+
+    /* Mobile touch improvements */
+    .new-chat-btn {
+        min-height: 48px;
+        -webkit-tap-highlight-color: rgba(155, 108, 255, 0.2);
+    }
+
+    .chat-history-item {
+        min-height: 48px;
+        -webkit-tap-highlight-color: rgba(155, 108, 255, 0.2);
     }
 
     .chat-header {
