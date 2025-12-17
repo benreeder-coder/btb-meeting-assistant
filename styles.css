@@ -761,6 +761,32 @@ body {
     animation: messageSlideIn 0.4s ease-out;
 }
 
+.typing-indicator .message-avatar {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    max-width: 36px;
+    max-height: 36px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.typing-indicator .message-avatar img {
+    width: 100%;
+    height: 100%;
+    max-width: 24px;
+    max-height: 24px;
+    object-fit: contain;
+}
+
 .typing-indicator .message-content {
     background: var(--bg-glass);
     backdrop-filter: blur(12px);
