@@ -150,10 +150,11 @@ class UIController {
             confirmDelete: document.getElementById('confirmDelete')
         };
 
-        // Create sidebar overlay for mobile
+        // Create sidebar overlay for mobile - append to app-container for proper z-index stacking
         this.sidebarOverlay = document.createElement('div');
         this.sidebarOverlay.className = 'sidebar-overlay';
-        document.body.appendChild(this.sidebarOverlay);
+        const appContainer = document.querySelector('.app-container');
+        appContainer.appendChild(this.sidebarOverlay);
     }
 
     bindEvents() {
