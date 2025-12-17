@@ -248,9 +248,14 @@ class UIController {
             this.state.createChat();
         }
 
-        // Add user message
-        this.state.addMessage('user', content);
-        this.render();
+        // Add user message to state
+        const userMessage = this.state.addMessage('user', content);
+
+        // Immediately add user message to DOM (don't wait for full render)
+        this.addMessageToDOM(userMessage);
+
+        // Update sidebar
+        this.renderChatHistory();
         this.scrollToBottom();
 
         // Show typing indicator
@@ -264,16 +269,18 @@ class UIController {
 
             // Remove typing indicator and add response
             this.hideTypingIndicator();
-            this.state.addMessage('assistant', response);
+            const assistantMessage = this.state.addMessage('assistant', response);
+            this.addMessageToDOM(assistantMessage);
         } catch (error) {
             console.error('API Error:', error);
             this.hideTypingIndicator();
-            this.state.addMessage('assistant', 'Sorry, I encountered an error while processing your request. Please try again.');
+            const errorMessage = this.state.addMessage('assistant', 'Sorry, I encountered an error while processing your request. Please try again.');
+            this.addMessageToDOM(errorMessage);
         }
 
         this.state.isLoading = false;
         this.handleInputChange();
-        this.render();
+        this.renderChatHistory(); // Only update sidebar, not messages
         this.scrollToBottom();
     }
 
@@ -379,6 +386,44 @@ class UIController {
         // Last resort: stringify the object
         console.warn('Could not extract response, returning stringified data:', data);
         return JSON.stringify(data, null, 2);
+    }
+
+    addMessageToDOM(msg) {
+        const messageEl = document.createElement('div');
+        messageEl.className = `message ${msg.role}`;
+
+        if (msg.role === 'user') {
+            messageEl.innerHTML = `
+                <div class="message-avatar">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </div>
+                <div class="message-content">
+                    <div class="message-text">${this.escapeHtml(msg.content)}</div>
+                    <div class="message-time">${this.formatMessageTime(msg.timestamp)}</div>
+                </div>
+            `;
+        } else {
+            messageEl.innerHTML = `
+                <div class="message-avatar">
+                    <img src="Untitled design (16).png" alt="BTB AI">
+                </div>
+                <div class="message-content">
+                    <div class="message-text">${this.parseMarkdown(msg.content)}</div>
+                    <div class="message-time">${this.formatMessageTime(msg.timestamp)}</div>
+                </div>
+            `;
+        }
+
+        // Insert before typing indicator if it exists, otherwise append
+        const typingIndicator = document.getElementById('typingIndicator');
+        if (typingIndicator) {
+            this.elements.messages.insertBefore(messageEl, typingIndicator);
+        } else {
+            this.elements.messages.appendChild(messageEl);
+        }
     }
 
     showTypingIndicator() {
