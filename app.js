@@ -240,6 +240,9 @@ class UIController {
         this.elements.messageInput.style.height = 'auto';
         this.handleInputChange();
 
+        // Hide welcome state immediately
+        this.elements.welcomeState.style.display = 'none';
+
         // Create chat if needed
         if (!this.state.activeChat) {
             this.state.createChat();
