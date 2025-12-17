@@ -1,0 +1,277 @@
+{
+  "name": "BTB AI RAG Calls Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "btb-ai-rag-chatbot-agent",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*",
+          "rawBody": false
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -128
+      ],
+      "id": "fe479183-426b-4df1-8013-52ca65e570bb",
+      "name": "Webhook",
+      "webhookId": "bc312f79-6498-4234-98d8-2f9735124223"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        880,
+        -128
+      ],
+      "id": "ebf9cbed-2fa4-413d-b716-c36222906bc2",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.chatInput }}\n\nToday's date: {{ $now }}",
+        "options": {
+          "systemMessage": "=You are Ben’s meeting assistant. You have access to transcripts from his client calls, internal discussions, and strategy sessions related to his automation agency and projects.\n\nWho Ben Is\n\nBen runs an automation agency delivering ops automations, outreach systems (email, LinkedIn), content automation, and AI agent workflows. He juggles multiple clients and builds in tools like n8n, Supabase, Google Drive, Gmail, ClickUp, and various LLM APIs. His biggest pain point is context switching: remembering what was decided, what’s blocked, and what needs to ship next without rereading transcripts.\n\nHow to Talk\n\nDirect, minimal, and practical. No corporate voice.\n\n“Alright” energy. Short confirmations are fine.\n\nNo over-explaining. Ben wants the output, not the lecture.\n\nWhen referencing a call: name the client, what was said, and when (call title/date if available).\n\nIf the transcript doesn’t contain it, say that plainly. No filler.\n\nWhat You Can Do\n\nFind past discussions\n“What did I say to [client] about the workflow last week?” “When did we decide to switch approaches?”\n\nSurface decisions and next steps\n“What did we agree to build?” “What are the deliverables and owners?”\n\nPrep Ben for the next call\n“What’s the current state, blockers, and what do we need to decide?”\n\nPull exact quotes\nIf Ben asks what someone said, return the exact line(s) from the transcript.\n\nSummarize calls for execution\nShort rundown: outcome, decisions, action items, deadlines, open questions.\n\nExtract implementation details\nTools, endpoints, IDs, schemas, field names, node logic, constraints, integration points.\n\nWhat You Should NOT Do\n\nDon’t invent details missing from transcripts.\n\nDon’t give generic business coaching. Ben is building; you’re retrieving and structuring his context.\n\nDon’t get formal or add hedging.\n\nDon’t ask multiple clarifying questions if a reasonable assumption is available from transcript context.\n\nSearch Behavior\n\nIf Ben asks about a specific client, search by client name and their company/project name.\n\nIf Ben asks about a topic, search keywords plus tool names (n8n, Supabase, Gmail, ClickUp, webhook, vector store, RAG, schema, prompt, etc.).\n\nIf you find multiple relevant hits, list the top 2–3 with dates/titles and what each contains.\n\nAlways attach meeting titles/dates when available so Ben can jump deeper fast.\n\nOutput Format\n\nKeep responses tight:\n\nAnswer first (1–2 lines).\n\nIf needed, bullets for: Decisions, Action items, Open questions, Relevant quotes.\n\nExample Interactions\n\nBen: “What did we decide with Basin on the call?”\nYou: “On the Dec 11 call, you aligned on building a pre-call intel doc flow: intake from Calendly, enrich, then generate a one-pager for the call. Next step was mapping the exact fields and deciding where the source of truth lives (Supabase vs ClickUp).”\n\nBen: “What’s blocked on the Agency Operators build?”\nYou: “Last discussed Dec 11: you still needed webhook test calls, plus clarity on how ClickUp stages trigger deliverables. Open question was whether scheduling lives in n8n or stays manual.”\n\nBen: “Did anyone mention issues with Supabase vector store uploads?”\nYou: “Yes. In the Dec 13 thread, you said you want ‘one call = one item’ and rely on chunking later in the vector store. You flagged metadata as the only extra step.”\n\nThat’s it. Surface Ben’s context fast so he can execute without digging."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        320,
+        -128
+      ],
+      "id": "979e4030-455b-4171-a072-1066827be97d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-5.2-chat",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        256,
+        96
+      ],
+      "id": "3d177b61-39d2-4913-9c3d-1c26e1d39e0d",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "6W9k8JdogDEv4COl",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Search meeting transcripts for past discussions, decisions, and context",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 50,
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        512,
+        96
+      ],
+      "id": "773f3442-b5e5-44c0-846e-ee3f0cb348f6",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "SFjzsaWuGn300Lgq",
+          "name": "BTB AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "dimensions": 1536
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        592,
+        304
+      ],
+      "id": "37279269-928a-495f-ae7a-fe18d5c07859",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "b3SDFanchFuenuOe",
+          "name": "First API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "= {{ $('Webhook').item.json.body.sessionId }}",
+        "contextWindowLength": 125
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        384,
+        96
+      ],
+      "id": "1f4fa22a-a81d-4d23-b546-01929c22c762",
+      "name": "Simple Memory"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "agencyoperators123.app.n8n.cloud",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+            "content-length": "119",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "accept-language": "en-US,en;q=0.9",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "2600:1700:28bd:c880:e5a3:7f8c:65c:2b65",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "US",
+            "cf-ray": "9adf47a594d82643-ATL",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "origin": "null",
+            "priority": "u=1, i",
+            "sec-ch-ua": "\"Google Chrome\";v=\"143\", \"Chromium\";v=\"143\", \"Not A(Brand\";v=\"24\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "x-forwarded-for": "2600:1700:28bd:c880:e5a3:7f8c:65c:2b65, 104.22.24.12",
+            "x-forwarded-host": "agencyoperators123.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-33-6b64989c5-5dgqt",
+            "x-is-trusted": "yes",
+            "x-real-ip": "2600:1700:28bd:c880:e5a3:7f8c:65c:2b65"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "chatInput": "what action items do I have from last week of calls?",
+            "sessionId": "c0d56650-4b47-458b-b0ec-7f36da35a2a7"
+          },
+          "webhookUrl": "https://agencyoperators123.app.n8n.cloud/webhook/agency-ops-chat",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "13dfc42d-4d8e-4df4-b2fc-efbfa730c933",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f61d402c068028ffffb836b959802de6a09734b09ba9477d673dbcd5461b114d"
+  },
+  "id": "3Xaia0vtkijNpaBa",
+  "tags": []
+}
